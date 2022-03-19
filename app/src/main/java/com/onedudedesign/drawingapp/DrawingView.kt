@@ -3,9 +3,11 @@ package com.onedudedesign.drawingapp
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
+import android.widget.Toast
 
 class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private var mDrawPath: CustomPath? = null
@@ -16,9 +18,17 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     private var color = Color.BLACK
     private var canvas: Canvas? = null
     private var mPaths = ArrayList<CustomPath>()
+    private var mUndoPaths = ArrayList<CustomPath>()
 
     init {
         setupDrawing()
+    }
+
+    fun onClickUndo(){
+        if(mPaths.size > 0) {
+            mUndoPaths.add(mPaths.removeAt(mPaths.size - 1))
+            invalidate()
+        }
     }
 
     private fun setupDrawing() {
@@ -69,10 +79,11 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
                 mDrawPath!!.moveTo(touchX!!, touchY!!)
             }
             MotionEvent.ACTION_MOVE -> {
-                mPaths.add(mDrawPath!!)
+
                 mDrawPath!!.lineTo(touchX!!, touchY!!)
             }
             MotionEvent.ACTION_UP -> {
+                mPaths.add(mDrawPath!!) //Add when to stroke is drawn to canvas and added in the path arraylist
                 mDrawPath = CustomPath(color, mBrushSize)
             }
             else -> return false
@@ -90,6 +101,13 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     fun setColor(newColor: String){
         color = Color.parseColor(newColor)
         mDrawPaint!!.color = color
+    }
+
+    fun onClickRedo() {
+        if(mUndoPaths.size > 0) {
+            mPaths.add(mUndoPaths.removeAt(mUndoPaths.size - 1))
+            invalidate()
+        }
     }
 
     internal inner class CustomPath(var color: Int, var brushThickness: Float) : Path() {
